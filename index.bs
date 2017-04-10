@@ -28,7 +28,9 @@ urlPrefix: https://heycam.github.io/webidl/; type: dfn;
 urlPrefix: https://www.w3.org/TR/css3-transitions/#; type: dfn;
     text: animatable properties
 urlPrefix: https://www.w3.org/TR/web-animations/#; type: dfn;
+    text: Web Animations
     url: the-documents-default-timeline; text: default document timeline
+    url: the-effect-stack; text: effect stack
 urlPrefix: https://tc39.github.io/ecma262/#sec-; type: dfn;
     text: constructor
     text: Construct
@@ -337,12 +339,14 @@ the maps are those specified in registerAnimator for the given <a>animator insta
     Exposed=(AnimationWorklet),
 ] interface ElementProxy {
     attribute StylePropertyMapReadOnly inputStyleMap;
-    attribute StylePropertyMapReadOnly outputStyleMap;
+    attribute StylePropertyMap outputStyleMap;
 };
 </pre>
 
 Issue: Todo: Should we have NoInterfaceObject/Exposed here? How do we properly represent that this
 cannot be constructed via javascript?
+
+Issue: TODO: Should the outputStyleMap be write-only?
 
 When user agent wants to <dfn>create an element proxy</dfn> given |element| with a given |animatorSlot|, it
 <em>must</em> run the following steps:
@@ -567,8 +571,23 @@ Animatable: no
 </dl>
 
 
-Effect Stack {#effect-stack}
-============================
+The Effect Stack {#the-effect-stack}
+====================================
+
+The change in properties caused by writing to the {{outputStyleMap}} of an <a>element proxy</a>
+are considered to be part of the <a>Web Animations</a> <a>effect stack</a> concept. After the call
+to the </a>animate function</a> of a given <a>animator instance</a> has completed, the user agent
+<em>must</em> perform the following steps. The user agent <em>may</em> perform this update process
+asynchronously.
+
+Issue: TODO: Add text along the lines of 'as long as property changes for a given element are
+      ordered' or something like that. We want to allow flexibility here for performance but also
+      provide a sane guarantee for the developer.
+
+For each (|property|, |value|) pair written to an <a>element proxy</a>'s {{outputStyleMap}}, run the
+following steps:
+
+  1. 
 
 Issue: Todo: the animators output style values have the highest order in animation stack effect and
 their composite operation is "replace" which is going to allow them to run independent on other

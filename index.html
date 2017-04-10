@@ -1429,7 +1429,7 @@ pre.idl.highlight { color: #708090; }
      <dt>This version:
      <dd><a class="u-url" href="https://wicg.github.io/animation-worklet/">https://wicg.github.io/animation-worklet/</a>
      <dt>Issue Tracking:
-     <dd><a href="https://github.com/WICG/animation-worklet/issues/">GitHub</a>
+     <dd><a href="https://github.com/stephenmcgruer/animation-worklet/issues/">GitHub</a>
      <dd><a href="#issues-index">Inline In Spec</a>
      <dt class="editor">Editors:
      <dd class="editor p-author h-card vcard"><a class="p-name fn u-email email" href="mailto:majidvp@google.com">Majid Valipour</a>
@@ -1470,7 +1470,7 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
     <li><a href="#running-animators"><span class="secno">8</span> <span class="content">Running Animators</span></a>
     <li><a href="#closing-animator"><span class="secno">9</span> <span class="content">Closing an Animator</span></a>
     <li><a href="#css-animator-notation"><span class="secno">10</span> <span class="content">CSS Animator Notation</span></a>
-    <li><a href="#effect-stack"><span class="secno">11</span> <span class="content">Effect Stack</span></a>
+    <li><a href="#the-effect-stack"><span class="secno">11</span> <span class="content">The Effect Stack</span></a>
     <li><a href="#security-considerations"><span class="secno">12</span> <span class="content">Security Considerations</span></a>
     <li><a href="#privacy-considerations"><span class="secno">13</span> <span class="content">Privacy Considerations</span></a>
     <li>
@@ -1741,11 +1741,12 @@ the maps are those specified in registerAnimator for the given <a data-link-type
     <a class="nv idl-code" data-link-type="extended-attribute" href="https://heycam.github.io/webidl/#Exposed">Exposed</a>=(<span class="n">AnimationWorklet</span>),
 ] <span class="kt">interface</span> <dfn class="nv dfn-paneled idl-code" data-dfn-type="interface" data-export="" id="elementproxy">ElementProxy</dfn> {
     <span class="kt">attribute</span> <a class="n" data-link-type="idl-name" href="https://drafts.css-houdini.org/css-typed-om-1/#stylepropertymapreadonly">StylePropertyMapReadOnly</a> <dfn class="nv idl-code" data-dfn-for="ElementProxy" data-dfn-type="attribute" data-export="" data-type="StylePropertyMapReadOnly" id="dom-elementproxy-inputstylemap">inputStyleMap<a class="self-link" href="#dom-elementproxy-inputstylemap"></a></dfn>;
-    <span class="kt">attribute</span> <a class="n" data-link-type="idl-name" href="https://drafts.css-houdini.org/css-typed-om-1/#stylepropertymapreadonly">StylePropertyMapReadOnly</a> <dfn class="nv dfn-paneled idl-code" data-dfn-for="ElementProxy" data-dfn-type="attribute" data-export="" data-type="StylePropertyMapReadOnly" id="dom-elementproxy-outputstylemap">outputStyleMap</dfn>;
+    <span class="kt">attribute</span> <a class="n" data-link-type="idl-name" href="https://drafts.css-houdini.org/css-typed-om-1/#stylepropertymap">StylePropertyMap</a> <dfn class="nv dfn-paneled idl-code" data-dfn-for="ElementProxy" data-dfn-type="attribute" data-export="" data-type="StylePropertyMap" id="dom-elementproxy-outputstylemap">outputStyleMap</dfn>;
 };
 </pre>
    <p class="issue" id="issue-65c145a8"><a class="self-link" href="#issue-65c145a8"></a> Todo: Should we have NoInterfaceObject/Exposed here? How do we properly represent that this
 cannot be constructed via javascript?</p>
+   <p class="issue" id="issue-28592e5b"><a class="self-link" href="#issue-28592e5b"></a> TODO: Should the outputStyleMap be write-only?</p>
    <p>When user agent wants to <dfn data-dfn-type="dfn" data-noexport="" id="create-an-element-proxy">create an element proxy<a class="self-link" href="#create-an-element-proxy"></a></dfn> given <var>element</var> with a given <var>animatorSlot</var>, it <em>must</em> run the following steps:</p>
    <ol>
     <li data-md="">
@@ -1959,7 +1960,18 @@ such <a data-link-type="dfn" href="#animator-instance" id="ref-for-animator-inst
      </ul>
      <p>If the same <a data-link-type="dfn" href="#animator-name" id="ref-for-animator-name-16">animator name</a> occurs multiple times in the list, only the first occurrence of that <a data-link-type="dfn" href="#animator-name" id="ref-for-animator-name-17">animator name</a> is processed.</p>
    </dl>
-   <h2 class="heading settled" data-level="11" id="effect-stack"><span class="secno">11. </span><span class="content">Effect Stack</span><a class="self-link" href="#effect-stack"></a></h2>
+   <h2 class="heading settled" data-level="11" id="the-effect-stack"><span class="secno">11. </span><span class="content">The Effect Stack</span><a class="self-link" href="#the-effect-stack"></a></h2>
+   <p>The change in properties caused by writing to the <code class="idl"><a data-link-type="idl" href="#dom-elementproxy-outputstylemap" id="ref-for-dom-elementproxy-outputstylemap-2">outputStyleMap</a></code> of an <a data-link-type="dfn" href="#element-proxy" id="ref-for-element-proxy-11">element proxy</a> are considered to be part of the <a data-link-type="dfn" href="https://www.w3.org/TR/web-animations/#web-animations">Web Animations</a> <a data-link-type="dfn" href="https://www.w3.org/TR/web-animations/#the-effect-stack">effect stack</a> concept. After the call
+to the animate function of a given <a data-link-type="dfn" href="#animator-instance" id="ref-for-animator-instance-18">animator instance</a> has completed, the user agent <em>must</em> perform the following steps. The user agent <em>may</em> perform this update process
+asynchronously.</p>
+   <p class="issue" id="issue-6861a84b"><a class="self-link" href="#issue-6861a84b"></a> TODO: Add text along the lines of 'as long as property changes for a given element are
+      ordered' or something like that. We want to allow flexibility here for performance but also
+      provide a sane guarantee for the developer.</p>
+   <p>For each (<var>property</var>, <var>value</var>) pair written to an <a data-link-type="dfn" href="#element-proxy" id="ref-for-element-proxy-12">element proxy</a>’s <code class="idl"><a data-link-type="idl" href="#dom-elementproxy-outputstylemap" id="ref-for-dom-elementproxy-outputstylemap-3">outputStyleMap</a></code>, run the
+following steps:</p>
+   <ol>
+    <li data-md="">
+   </ol>
    <p class="issue" id="issue-b3b90f2d"><a class="self-link" href="#issue-b3b90f2d"></a> Todo: the animators output style values have the highest order in animation stack effect and
 their composite operation is "replace" which is going to allow them to run independent on other
 animations and in a different thread. Supporting other composite operation is not in scope at this
@@ -2344,7 +2356,7 @@ point.</p>
     <a class="nv idl-code" data-link-type="extended-attribute" href="https://heycam.github.io/webidl/#Exposed">Exposed</a>=(<span class="n">AnimationWorklet</span>),
 ] <span class="kt">interface</span> <a class="nv" href="#elementproxy">ElementProxy</a> {
     <span class="kt">attribute</span> <a class="n" data-link-type="idl-name" href="https://drafts.css-houdini.org/css-typed-om-1/#stylepropertymapreadonly">StylePropertyMapReadOnly</a> <a class="nv" data-type="StylePropertyMapReadOnly" href="#dom-elementproxy-inputstylemap">inputStyleMap</a>;
-    <span class="kt">attribute</span> <a class="n" data-link-type="idl-name" href="https://drafts.css-houdini.org/css-typed-om-1/#stylepropertymapreadonly">StylePropertyMapReadOnly</a> <a class="nv" data-type="StylePropertyMapReadOnly" href="#dom-elementproxy-outputstylemap">outputStyleMap</a>;
+    <span class="kt">attribute</span> <a class="n" data-link-type="idl-name" href="https://drafts.css-houdini.org/css-typed-om-1/#stylepropertymap">StylePropertyMap</a> <a class="nv" data-type="StylePropertyMap" href="#dom-elementproxy-outputstylemap">outputStyleMap</a>;
 };
 
 </pre>
@@ -2352,11 +2364,15 @@ point.</p>
   <div style="counter-reset:issue">
    <div class="issue"> Todo: Should we have NoInterfaceObject/Exposed here? How do we properly represent that this
 cannot be constructed via javascript?<a href="#issue-65c145a8"> ↵ </a></div>
+   <div class="issue"> TODO: Should the outputStyleMap be write-only?<a href="#issue-28592e5b"> ↵ </a></div>
    <div class="issue"> Todo: Animators that have Timeline as an explicit input will need to request frame
 on every animation frame. Formulate this here.<a href="#issue-5edadb19"> ↵ </a></div>
    <div class="issue"> Consider giving user agents permission to skip running animator instances to throttle
     slow animators.<a href="#issue-dc52329c"> ↵ </a></div>
    <div class="issue"> Todo: Define when we may get rid of the animator.<a href="#issue-d4d8f39c"> ↵ </a></div>
+   <div class="issue"> TODO: Add text along the lines of 'as long as property changes for a given element are
+      ordered' or something like that. We want to allow flexibility here for performance but also
+      provide a sane guarantee for the developer.<a href="#issue-6861a84b"> ↵ </a></div>
    <div class="issue"> Todo: the animators output style values have the highest order in animation stack effect and
 their composite operation is "replace" which is going to allow them to run independent on other
 animations and in a different thread. Supporting other composite operation is not in scope at this
@@ -2469,6 +2485,7 @@ point.<a href="#issue-b3b90f2d"> ↵ </a></div>
     <li><a href="#ref-for-animator-instance-9">7. Requesting Animation Frames</a> <a href="#ref-for-animator-instance-10">(2)</a> <a href="#ref-for-animator-instance-11">(3)</a>
     <li><a href="#ref-for-animator-instance-12">8. Running Animators</a>
     <li><a href="#ref-for-animator-instance-13">10. CSS Animator Notation</a> <a href="#ref-for-animator-instance-14">(2)</a> <a href="#ref-for-animator-instance-15">(3)</a> <a href="#ref-for-animator-instance-16">(4)</a> <a href="#ref-for-animator-instance-17">(5)</a>
+    <li><a href="#ref-for-animator-instance-18">11. The Effect Stack</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="animator-name">
@@ -2500,6 +2517,7 @@ point.<a href="#issue-b3b90f2d"> ↵ </a></div>
     <li><a href="#ref-for-element-proxy-2">6. Creating an Element Proxy</a> <a href="#ref-for-element-proxy-3">(2)</a>
     <li><a href="#ref-for-element-proxy-4">7. Requesting Animation Frames</a> <a href="#ref-for-element-proxy-5">(2)</a>
     <li><a href="#ref-for-element-proxy-6">10. CSS Animator Notation</a> <a href="#ref-for-element-proxy-7">(2)</a> <a href="#ref-for-element-proxy-8">(3)</a> <a href="#ref-for-element-proxy-9">(4)</a> <a href="#ref-for-element-proxy-10">(5)</a>
+    <li><a href="#ref-for-element-proxy-11">11. The Effect Stack</a> <a href="#ref-for-element-proxy-12">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="proxied-element">
@@ -2566,6 +2584,7 @@ point.<a href="#issue-b3b90f2d"> ↵ </a></div>
    <b><a href="#dom-elementproxy-outputstylemap">#dom-elementproxy-outputstylemap</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-dom-elementproxy-outputstylemap-1">6. Creating an Element Proxy</a>
+    <li><a href="#ref-for-dom-elementproxy-outputstylemap-2">11. The Effect Stack</a> <a href="#ref-for-dom-elementproxy-outputstylemap-3">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="update-proxy-input-style-map">
